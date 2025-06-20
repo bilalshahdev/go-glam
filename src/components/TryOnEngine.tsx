@@ -153,6 +153,9 @@ export const TryOnEngine = ({
                   Professional-grade AI processing for ultra-realistic results
                 </p>
               )}
+              <p className="text-purple-200 text-xs mt-2">
+                Note: While Replicate AI provides high-quality styling, the precision of very fine details may vary.
+              </p>
             </div>
           </div>
 

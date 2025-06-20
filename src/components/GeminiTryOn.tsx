@@ -36,6 +36,7 @@ export const GeminiTryOn = ({
 }: GeminiTryOnProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState<string>("");
+  const [analysisResultText, setAnalysisResultText] = useState<string | null>(null);
 
   const applyGeminiEffects = async () => {
     if (!imageUrl) {
@@ -44,15 +45,16 @@ export const GeminiTryOn = ({
     }
 
     if (!selectedMakeup && !selectedHairStyle && !selectedHairColor) {
-      toast.error("Please select at least one effect to apply");
+      toast.error("Please select an option to get styling advice");
       return;
     }
 
     setIsProcessing(true);
+    setAnalysisResultText(null); // Clear previous results
     
     try {
-      setProcessingStep("Initializing Gemini AI processing...");
-      console.log('🤖 Starting Gemini-powered makeup application');
+      setProcessingStep("Initializing Gemini AI analysis...");
+      console.log('🤖 Starting Gemini-powered AI analysis');
       
       const { data: geminiResult, error: geminiError } = await supabase.functions.invoke('gemini-makeup-tryon', {
         body: {
@@ -71,29 +73,27 @@ export const GeminiTryOn = ({
       }
 
       if (!geminiResult) {
-        throw new Error('No response from Gemini processing service');
+        throw new Error('No response from Gemini AI analysis service');
       }
 
-      setProcessingStep("Applying AI-enhanced effects...");
+      setProcessingStep("Processing AI Styling Advice...");
       
-      if (geminiResult.result?.imageUrl) {
-        console.log('✅ Gemini processing successful');
-        onProcessedImage(geminiResult.result.imageUrl);
+      if (geminiResult.result?.geminiAnalysis) {
+        console.log('✅ Gemini AI analysis successful');
+        setAnalysisResultText(geminiResult.result.geminiAnalysis);
+        // The image itself is not modified, so we pass back the original image URL
+        onProcessedImage(imageUrl);
+        console.log("Gemini AI Analysis:", geminiResult.result.geminiAnalysis);
         
-        const appliedEffects = [];
-        if (selectedMakeup) appliedEffects.push(selectedMakeup);
-        if (selectedHairStyle) appliedEffects.push(selectedHairStyle);
-        if (selectedHairColor) appliedEffects.push(selectedHairColor);
-        
-        toast.success(`🤖 Gemini AI try-on complete! Applied: ${appliedEffects.join(', ')}`);
+        toast.success("🤖 Gemini AI analysis received!");
       } else {
         console.error('Invalid Gemini response structure:', geminiResult);
-        throw new Error('Invalid response from Gemini processing service');
+        throw new Error('Invalid response from Gemini AI analysis service. Missing analysis text.');
       }
       
     } catch (error: any) {
-      console.error('Error in Gemini makeup application:', error);
-      toast.error(`Gemini try-on failed: ${error.message || 'Unknown error occurred'}`);
+      console.error('Error in Gemini AI analysis:', error);
+      toast.error(`Gemini AI analysis failed: ${error.message || 'Unknown error occurred'}`);
     } finally {
       setIsProcessing(false);
       setProcessingStep("");
@@ -108,11 +108,11 @@ export const GeminiTryOn = ({
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Brain className="w-5 h-5" />
-            Gemini AI Virtual Try-On
+            Gemini AI Styling Advice & Recommendations
           </h3>
           {hasEffectsSelected && (
             <p className="text-purple-100 text-sm mt-1">
-              Powered by Google's Gemini AI for realistic results
+              Get AI-powered styling advice based on your selections.
             </p>
           )}
         </div>
@@ -120,7 +120,7 @@ export const GeminiTryOn = ({
 
       {hasEffectsSelected && (
         <div className="mb-4 p-3 bg-white/10 rounded-lg backdrop-blur-sm">
-          <h4 className="font-medium text-sm mb-2">Selected Effects (Gemini AI):</h4>
+          <h4 className="font-medium text-sm mb-2">Your Selections for AI Advice:</h4>
           <div className="flex flex-wrap gap-2">
             {selectedMakeup && (
               <span className="px-2 py-1 bg-white/20 rounded-full text-xs">
@@ -154,6 +154,18 @@ export const GeminiTryOn = ({
         </div>
       )}
 
+      {analysisResultText && (
+        <div className="mt-6 mb-4 p-4 bg-white/10 rounded-lg backdrop-blur-sm">
+          <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-yellow-400" />
+            Gemini AI Styling Advice:
+          </h4>
+          <p className="text-sm text-purple-100 whitespace-pre-wrap">
+            {analysisResultText}
+          </p>
+        </div>
+      )}
+
       <Button
         onClick={applyGeminiEffects}
         disabled={!imageUrl || isProcessing || !hasEffectsSelected}
@@ -162,24 +174,24 @@ export const GeminiTryOn = ({
         {isProcessing ? (
           <>
             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-            {processingStep || "Processing with Gemini AI..."}
+            {processingStep || "Getting AI Styling Advice..."}
           </>
         ) : (
           <>
             <Sparkles className="w-5 h-5 mr-2" />
-            Apply Gemini AI Try-On
+            Get Gemini AI Styling Advice
           </>
         )}
       </Button>
 
       {!hasEffectsSelected && (
         <p className="text-center text-purple-100 text-sm mt-3">
-          Select makeup, hairstyle, or hair color to enable Gemini AI try-on
+          Select makeup, hairstyle, or hair color to get Gemini AI styling advice
         </p>
       )}
 
       <div className="mt-3 text-xs text-purple-100 text-center">
-        🤖 Powered by Google Gemini • Advanced AI image processing
+        🤖 Powered by Google Gemini • AI Styling Advice & Recommendations
       </div>
     </div>
   );
