@@ -13,6 +13,8 @@ interface FaceLandmarks {
   face: { x: number; y: number; width: number; height: number };
   eyebrows: { left: { x: number; y: number; width: number; height: number }, right: { x: number; y: number; width: number; height: number } };
   detected: boolean;
+  imageWidth?: number;
+  imageHeight?: number;
 }
 
 export const FaceDetection = ({ imageUrl, onFaceLandmarks }: FaceDetectionProps) => {
@@ -43,19 +45,20 @@ export const FaceDetection = ({ imageUrl, onFaceLandmarks }: FaceDetectionProps)
         if (faceArea) {
           const landmarks = calculateFacialLandmarks(faceArea, img.width, img.height);
           console.log('Face detected with landmarks:', landmarks);
-          onFaceLandmarks(landmarks);
+          onFaceLandmarks({ ...landmarks, imageWidth: img.width, imageHeight: img.height });
         } else {
           // Fallback to center positioning if no face detected
           const fallbackLandmarks = createFallbackLandmarks(img.width, img.height);
           console.log('Using fallback face landmarks:', fallbackLandmarks);
-          onFaceLandmarks(fallbackLandmarks);
+          onFaceLandmarks({ ...fallbackLandmarks, imageWidth: img.width, imageHeight: img.height });
         }
       };
 
       img.onerror = () => {
         console.error('Failed to load image for face detection');
+        // Pass undefined for dimensions on error, or some default if required by consuming logic
         const fallbackLandmarks = createFallbackLandmarks(400, 300);
-        onFaceLandmarks(fallbackLandmarks);
+        onFaceLandmarks({ ...fallbackLandmarks, imageWidth: 400, imageHeight: 300 });
       };
 
       img.src = imageUrl;
