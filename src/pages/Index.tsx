@@ -22,6 +22,8 @@ interface FaceLandmarks {
     right: { x: number; y: number; width: number; height: number };
   };
   detected: boolean;
+  imageWidth?: number;
+  imageHeight?: number;
 }
 
 const Index = () => {
@@ -67,6 +69,7 @@ const Index = () => {
   };
 
   const handleProcessedImage = (processedUrl: string) => {
+    console.log('[IndexPage] Received processed image data in handler:', processedUrl.substring(0, 100) + "...");
     setProcessedImage(processedUrl);
   };
 

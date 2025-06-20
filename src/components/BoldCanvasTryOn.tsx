@@ -16,7 +16,7 @@ interface FaceLandmarks {
   detected: boolean;
 }
 
-interface HuggingFaceTryOnProps {
+interface BoldCanvasTryOnProps {
   imageUrl: string;
   selectedMakeup: string;
   selectedHairStyle: string;
@@ -25,16 +25,17 @@ interface HuggingFaceTryOnProps {
   faceLandmarks?: FaceLandmarks | null;
 }
 
-export const HuggingFaceTryOn = ({ 
+export const BoldCanvasTryOn = ({
   imageUrl, 
   selectedMakeup, 
   selectedHairStyle, 
   selectedHairColor,
   onProcessedImage,
   faceLandmarks
-}: HuggingFaceTryOnProps) => {
+}: BoldCanvasTryOnProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState<string>("");
+  const [showLandmarkWarning, setShowLandmarkWarning] = useState(false);
 
   const applyStrongEffects = async () => {
     if (!imageUrl) {
@@ -45,6 +46,15 @@ export const HuggingFaceTryOn = ({
     if (!selectedMakeup && !selectedHairStyle && !selectedHairColor) {
       toast.error("Please select at least one effect to apply");
       return;
+    }
+
+    // Check for landmark quality before processing
+    if (!faceLandmarks || !faceLandmarks.detected) {
+      setShowLandmarkWarning(true);
+      // Optionally, you could toast here as well or instead
+      // toast.warning("Face not clearly detected. Effects may be less accurate.");
+    } else {
+      setShowLandmarkWarning(false); // Reset warning if landmarks are good
     }
 
     setIsProcessing(true);
@@ -117,8 +127,9 @@ export const HuggingFaceTryOn = ({
       console.log('🖼️ Final image generated, length:', finalImageUrl.length);
       console.log('🖼️ Image URL preview:', finalImageUrl.substring(0, 100) + '...');
       
-      console.log('📤 Calling onProcessedImage with final URL');
+      console.log('[BoldCanvasTryOn] Before onProcessedImage call. Data:', finalImageUrl.substring(0,100) + "...");
       onProcessedImage(finalImageUrl);
+      console.log('[BoldCanvasTryOn] After onProcessedImage call.');
       
       const appliedEffects = [];
       if (selectedMakeup) appliedEffects.push(selectedMakeup);
@@ -155,8 +166,9 @@ export const HuggingFaceTryOn = ({
         console.log('👄 Targeting lips area:', lips);
         
         // Apply bold red color to lips region
-        for (let y = Math.max(0, lips.y - 20); y < Math.min(canvas.height, lips.y + lips.height + 20); y++) {
-          for (let x = Math.max(0, lips.x - 20); x < Math.min(canvas.width, lips.x + lips.width + 20); x++) {
+        const padding = 5; // Reduced padding for tighter application
+        for (let y = Math.max(0, lips.y - padding); y < Math.min(canvas.height, lips.y + lips.height + padding); y++) {
+          for (let x = Math.max(0, lips.x - padding); x < Math.min(canvas.width, lips.x + lips.width + padding); x++) {
             const i = (y * canvas.width + x) * 4;
             
             // Strong red lipstick effect
@@ -188,9 +200,9 @@ export const HuggingFaceTryOn = ({
               const i = (y * canvas.width + x) * 4;
               
               // Dark eye makeup
-              data[i] = Math.max(0, data[i] * 0.4);
-              data[i + 1] = Math.max(0, data[i + 1] * 0.4);
-              data[i + 2] = Math.max(0, data[i + 2] * 0.4);
+              data[i] = Math.max(0, data[i] * 0.5);
+              data[i + 1] = Math.max(0, data[i + 1] * 0.5);
+              data[i + 2] = Math.max(0, data[i + 2] * 0.5);
             }
           }
         });
@@ -228,13 +240,12 @@ export const HuggingFaceTryOn = ({
     const hairTop = landmarks?.face ? Math.max(0, landmarks.face.y - 100) : 0;
     const hairBottom = landmarks?.face ? landmarks.face.y + (landmarks.face.height * 0.3) : canvas.height * 0.5;
 
-    console.log('🎨 Hair region:', { hairTop, hairBottom });
+    console.log('🎨 Original Hair region defined by landmarks/fallback:', { hairTop, hairBottom });
 
     for (let y = hairTop; y < hairBottom; y++) {
       for (let x = 0; x < canvas.width; x++) {
         const i = (y * canvas.width + x) * 4;
         const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-        
         // Apply color to hair regions (avoiding very dark or very light areas)
         if (brightness > 30 && brightness < 200) {
           data[i] = targetColor[0];
@@ -269,7 +280,7 @@ export const HuggingFaceTryOn = ({
           const i = (y * canvas.width + x) * 4;
           
           // Add curly texture effect
-          const textureEffect = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 50;
+          const textureEffect = Math.sin(x * 0.08) * Math.cos(y * 0.08) * 30;
           data[i] = Math.min(255, Math.max(0, data[i] + textureEffect));
           data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + textureEffect));
           data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + textureEffect));
@@ -374,6 +385,12 @@ export const HuggingFaceTryOn = ({
       <div className="mt-3 text-xs text-green-100 text-center">
         🎉 No API costs • {faceLandmarks?.detected ? 'Bold precision targeting' : 'Dramatic processing'} • Maximum intensity effects!
       </div>
+
+      {showLandmarkWarning && (
+        <p className="mt-4 text-sm text-yellow-300 bg-yellow-800/50 p-3 rounded-lg text-center">
+          Warning: Face not clearly detected. Effects are applied generally and may be less accurate. For best results, use a clear, front-facing photo.
+        </p>
+      )}
     </div>
   );
 };

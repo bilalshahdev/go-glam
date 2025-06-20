@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Brain, Loader2, DollarSign } from "lucide-react";
-import { HuggingFaceTryOn } from "./HuggingFaceTryOn";
+import { BoldCanvasTryOn } from "./BoldCanvasTryOn";
 import { GeminiTryOn } from "./GeminiTryOn";
 
 interface FaceLandmarks {
@@ -108,7 +108,7 @@ export const TryOnEngine = ({
   return (
     <div className="space-y-4">
       {/* Free Hugging Face Option */}
-      <HuggingFaceTryOn
+      <BoldCanvasTryOn
         imageUrl={imageUrl}
         selectedMakeup={selectedMakeup}
         selectedHairStyle={selectedHairStyle}
