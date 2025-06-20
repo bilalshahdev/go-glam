@@ -40,13 +40,13 @@ serve(async (req) => {
       
       let makeupPrompt = "";
       if (makeupStyle.toLowerCase().includes('red') || makeupStyle.toLowerCase().includes('classic')) {
-        makeupPrompt = "Apply professional red lipstick and classic eye makeup with winged eyeliner";
+        makeupPrompt = "Apply professional red lipstick directly to the lips and classic eye makeup including winged eyeliner on the eyelids";
       } else if (makeupStyle.toLowerCase().includes('pink') || makeupStyle.toLowerCase().includes('soft')) {
-        makeupPrompt = "Apply soft pink lipstick and natural eye makeup with subtle enhancement";
+        makeupPrompt = "Apply soft pink lipstick directly to the lips and natural eye makeup with subtle enhancement on the eyelids";
       } else if (makeupStyle.toLowerCase().includes('smoky')) {
-        makeupPrompt = "Apply dramatic smoky eye makeup with dark eyeshadow and defined eyes";
+        makeupPrompt = "Apply dramatic smoky eye makeup with dark eyeshadow on the eyelids and defined eyes";
       } else if (makeupStyle.toLowerCase().includes('golden')) {
-        makeupPrompt = "Apply golden eyeshadow makeup with warm tones and peachy lips";
+        makeupPrompt = "Apply golden eyeshadow makeup with warm tones on the eyelids and peachy lipstick on the lips";
       } else {
         makeupPrompt = `Apply ${makeupStyle} makeup professionally`;
       }
