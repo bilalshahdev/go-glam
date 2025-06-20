@@ -75,7 +75,7 @@ export const HuggingFaceTryOn = ({
       console.log('🎨 Starting bold effects application');
       console.log('Original image URL:', imageUrl);
       console.log('Face landmarks available:', !!faceLandmarks);
-      console.log('Selected effects:', { selectedMakeup, selectedHairStyle, selectedHairColor });
+      // console.log('Selected effects:', { selectedMakeup, selectedHairStyle, selectedHairColor }); // Verbose
       
       // Create image element from URL
       const img = new Image();
@@ -109,36 +109,40 @@ export const HuggingFaceTryOn = ({
       // Apply makeup effects with much stronger intensity
       if (selectedMakeup) {
         setProcessingStep("Applying bold makeup...");
-        console.log('🎭 Applying makeup:', selectedMakeup);
+        // console.log('🎭 Applying makeup step selected.'); // Removed for cleanup
         await applyBoldMakeup(ctx, canvas, selectedMakeup, faceLandmarks);
         effectsApplied++;
-        console.log('✅ Makeup applied');
+        // console.log('✅ Makeup application processed.'); // Removed for cleanup
       }
 
-      // Apply hair color with dramatic changes
+      // Re-enable hair effects
       if (selectedHairColor) {
         setProcessingStep("Transforming hair color dramatically...");
-        console.log('🎨 Applying hair color:', selectedHairColor);
+        // console.log('🎨 Applying hair color:', selectedHairColor); // Removed for cleanup
         await applyDramaticHairColor(ctx, canvas, selectedHairColor, faceLandmarks);
         effectsApplied++;
-        console.log('✅ Hair color applied');
+        // console.log('✅ Hair color applied'); // Removed for cleanup
       }
 
-      // Apply hair style effects
       if (selectedHairStyle) {
         setProcessingStep("Adding hair styling effects...");
-        console.log('✂️ Applying hair style:', selectedHairStyle);
+        // console.log('✂️ Applying hair style:', selectedHairStyle); // Removed for cleanup
         await applyVisibleHairStyle(ctx, canvas, selectedHairStyle, faceLandmarks);
         effectsApplied++;
-        console.log('✅ Hair style applied');
+        // console.log('✅ Hair style applied'); // Removed for cleanup
       }
+
+      // Removed diagnostic pixel sampling for cleanup
+      // if (landmarks?.detected && landmarks.lips && landmarks.lips.width > 0 && landmarks.lips.height > 0) { ... }
+      // if (landmarks?.detected && landmarks.leftEye && landmarks.leftEye.width > 0 && landmarks.leftEye.height > 0) { ... }
 
       setProcessingStep("Generating final image...");
       const finalImageUrl = canvas.toDataURL('image/jpeg', 0.9);
-      console.log('🖼️ Final image generated, length:', finalImageUrl.length);
-      console.log('🖼️ Image URL preview:', finalImageUrl.substring(0, 100) + '...');
       
-      console.log('📤 Calling onProcessedImage with final URL');
+      // Removed enhanced logging for Data URL for cleanup
+      // if (finalImageUrl && finalImageUrl.startsWith('data:image/jpeg;base64,')) { ... } else { ... }
+
+      // console.log('📤 Calling onProcessedImage with final URL'); // Removed for cleanup
       onProcessedImage(finalImageUrl);
       
       const appliedEffects = [];
@@ -150,8 +154,11 @@ export const HuggingFaceTryOn = ({
       toast.success(`🎨 Bold transformation complete! Applied: ${appliedEffects.join(', ')}`);
       
     } catch (error: any) {
-      console.error('💥 Error in effects application:', error);
-      toast.error(`Try-on failed: ${error.message || 'Unknown error occurred'}`);
+      console.error('💥 CRITICAL ERROR in effects application pipeline:', error);
+      if (error.message && error.message.includes('canvas')) {
+        console.error('🎨 Specific canvas operation error detail:', error.stack);
+      }
+      toast.error(`Try-on failed: ${error.message || 'Unknown error occurred during canvas operations'}`);
     } finally {
       setIsProcessing(false);
       setProcessingStep("");
@@ -164,7 +171,7 @@ export const HuggingFaceTryOn = ({
     makeup: string, 
     landmarks?: FaceLandmarks | null
   ) => {
-    console.log('💄 Processing makeup with landmarks:', landmarks);
+    // console.log('💄 Processing makeup with landmarks:', landmarks); // Removed for cleanup
 
     if (makeup.toLowerCase().includes('red') || makeup.toLowerCase().includes('classic')) {
       // Apply VERY strong red lipstick
@@ -172,9 +179,12 @@ export const HuggingFaceTryOn = ({
       if (landmarks?.detected && landmarks.rawPoints && landmarks.rawPoints.length > 0) {
         const lipPoints = LIPS_OUTER_INDICES.map(index => landmarks.rawPoints![index]).filter(pt => pt);
         
-        if (lipPoints.length >= 3) { // Need at least 3 points for a polygon
-          console.log('👄 Drawing lips polygon using MediaPipe points.');
-          ctx.fillStyle = 'rgba(220, 20, 60, 0.7)'; // Strong red with some alpha
+        if (lipPoints.length >= 3) {
+          // Lipstick color set to final intended color: 'rgba(220, 20, 60, 1)'
+          ctx.fillStyle = 'rgba(220, 20, 60, 1)'; // Original RGB, Alpha 1 (fully opaque)
+          // console.log('👄 Lips polygon: fillStyle set to', ctx.fillStyle, 'with', lipPoints.length, 'points.'); // Removed for cleanup
+          // console.log('👄 Lips bounding box for reference (not used for polygon fill):', landmarks.lips); // Removed for cleanup
+
           ctx.beginPath();
           ctx.moveTo(lipPoints[0].x, lipPoints[0].y);
           for (let i = 1; i < lipPoints.length; i++) {
@@ -182,16 +192,19 @@ export const HuggingFaceTryOn = ({
           }
           ctx.closePath();
           ctx.fill();
+          // console.log('👄 Lips polygon drawn and filled.'); // Removed for cleanup
           lipsAppliedByPolygon = true;
+        } else {
+          // console.log('👄 Not enough points to draw lips polygon (need >= 3, got', lipPoints.length, '). Falling back.'); // Removed for cleanup
         }
+      } else {
+        // console.log('👄 No detected landmarks or rawPoints for lips polygon. Falling back.'); // Removed for cleanup
       }
 
-      // Get image data after potential polygon fill for further pixel manipulation if needed
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
+      // Fallback lipstick drawing using fillRect, if polygon wasn't drawn
+      // This needs to happen BEFORE getImageData for eye makeup
       if (!lipsAppliedByPolygon) {
-        console.log('👄 Falling back to lips bounding box for lipstick.');
+        // console.log('👄 Applying fallback lipstick using fillRect (Opaque Red).'); // Removed for cleanup
         const lipsBox = landmarks?.lips || (landmarks?.face ? {
           x: landmarks.face.x + landmarks.face.width * 0.3,
           y: landmarks.face.y + landmarks.face.height * 0.7,
@@ -201,54 +214,60 @@ export const HuggingFaceTryOn = ({
           x: canvas.width * 0.4, y: canvas.height * 0.7, width: canvas.width * 0.2, height: canvas.height * 0.1
         });
 
-        const expand = 5; // Expand lips bounding box slightly
-        for (let y = Math.max(0, Math.floor(lipsBox.y - expand)); y < Math.min(canvas.height, Math.ceil(lipsBox.y + lipsBox.height + expand)); y++) {
-          for (let x = Math.max(0, Math.floor(lipsBox.x - expand)); x < Math.min(canvas.width, Math.ceil(lipsBox.x + lipsBox.width + expand)); x++) {
-            const i = (y * canvas.width + x) * 4;
-            data[i] = 220; data[i + 1] = 20; data[i + 2] = 60; // Red
-            data[i + 3] = Math.min(255, data[i+3] + 150); // Increase alpha to make it more opaque
-          }
+        // Lipstick color set to final intended color: 'rgba(220, 20, 60, 1)'
+        ctx.fillStyle = 'rgba(220, 20, 60, 1)'; // Original RGB, Alpha 1 (fully opaque)
+        // console.log('👄 Fallback lips rect: fillStyle set to', ctx.fillStyle, 'for lipsBox:', lipsBox); // Removed for cleanup
+        if (lipsBox.width > 0 && lipsBox.height > 0) {
+          ctx.fillRect(lipsBox.x, lipsBox.y, lipsBox.width, lipsBox.height);
+          // console.log('👄 Fallback lips rectangle drawn and filled.'); // Removed for cleanup
+        } else {
+          // console.log('👄 Fallback lips rectangle has zero width/height. Not drawn.', lipsBox); // Removed for cleanup
         }
       }
+
+      // Now, get image data to apply eye makeup using pixel manipulation.
+      // This ensures any lipstick (polygon or fallback rect) is part of the imageData.
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
       
-      // Apply eye makeup using (now more accurate) bounding boxes
+      // Re-enable eye makeup
       if (landmarks?.detected && landmarks.leftEye && landmarks.rightEye) {
-        console.log('👁️ Applying eye makeup using MediaPipe bounding boxes.');
+        // console.log('👁️ Applying eye makeup using MediaPipe bounding boxes.'); // Removed for cleanup
         [landmarks.leftEye, landmarks.rightEye].forEach(eye => {
           if (eye.width > 0 && eye.height > 0) { // Ensure bounding box is valid
             const expand = 10; // Expand bounding box slightly for a bolder effect
             for (let y = Math.max(0, Math.floor(eye.y - expand)); y < Math.min(canvas.height, Math.ceil(eye.y + eye.height + expand)); y++) {
               for (let x = Math.max(0, Math.floor(eye.x - expand)); x < Math.min(canvas.width, Math.ceil(eye.x + eye.width + expand)); x++) {
                 const i = (y * canvas.width + x) * 4;
+                // Darken existing pixels for eye makeup
                 data[i] = Math.max(0, data[i] * 0.4);
                 data[i + 1] = Math.max(0, data[i + 1] * 0.4);
                 data[i + 2] = Math.max(0, data[i + 2] * 0.4);
+                // Alpha remains unchanged or could be set to 255 if needed
               }
             }
           }
         });
       }
-      ctx.putImageData(imageData, 0, 0); // Put data back after all makeup effects
+      ctx.putImageData(imageData, 0, 0); // Put data back after eye makeup
     } else {
-      // If not red/classic makeup, just ensure image data is put back if it was retrieved
-      // This case might need more specific handling if other makeup types are implemented
-      // For now, if lips polygon was drawn, this is already on canvas.
-      // If only eye makeup was to be applied (not currently the case for this component)
-      // we would need to ensure imageData is fetched and put back.
+      // This 'else' corresponds to: if (!(makeup.toLowerCase().includes('red') || makeup.toLowerCase().includes('classic')))
+      // If other makeup types are selected, they would be handled here.
     }
-    console.log('💄 Makeup processing complete');
+    // console.log('💄 applyBoldMakeup function complete.'); // Removed for cleanup
   };
 
+  // Hair effect functions are now re-enabled
   const applyDramaticHairColor = async (
-    ctx: CanvasRenderingContext2D, 
-    canvas: HTMLCanvasElement, 
-    color: string, 
+    ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    color: string,
     landmarks?: FaceLandmarks | null
   ) => {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
 
-    console.log('🎨 Processing hair color:', color);
+    // console.log('🎨 Processing hair color:', color); // Removed for cleanup
 
     const colorMap: { [key: string]: [number, number, number] } = {
       'blonde': [255, 220, 177],
@@ -260,7 +279,7 @@ export const HuggingFaceTryOn = ({
     };
 
     const targetColor = colorMap[color.toLowerCase()] || [150, 150, 150];
-    console.log('🎨 Using color:', targetColor);
+    // console.log('🎨 Using color:', targetColor); // Removed for cleanup
     
     // Define hair region using potentially more accurate face landmarks
     let hairTop, hairBottom;
@@ -269,15 +288,15 @@ export const HuggingFaceTryOn = ({
       // Hair typically starts above the face bounding box and extends to cover the top part of the face area
       hairTop = Math.max(0, landmarks.face.y - landmarks.face.height * 0.5); // Start 50% of face height above face top
       hairBottom = landmarks.face.y + landmarks.face.height * 0.4; // Cover roughly top 40% of the face height
-      console.log('🎨 Defined hair region using MediaPipe face box:', { top: hairTop, bottom: hairBottom, faceY: landmarks.face.y, faceHeight: landmarks.face.height });
+      // console.log('🎨 Defined hair region using MediaPipe face box:', { top: hairTop, bottom: hairBottom, faceY: landmarks.face.y, faceHeight: landmarks.face.height }); // Removed for cleanup
     } else {
       // Fallback if no landmarks
       hairTop = 0;
       hairBottom = canvas.height * 0.5;
-      console.log('🎨 Defined hair region using fallback:', { hairTop, hairBottom });
+      // console.log('🎨 Defined hair region using fallback:', { hairTop, hairBottom }); // Removed for cleanup
     }
 
-    console.log('🎨 Final Hair region for coloring:', { hairTop, hairBottom });
+    // console.log('🎨 Final Hair region for coloring:', { hairTop, hairBottom }); // Removed for cleanup
 
     for (let y = Math.floor(hairTop); y < Math.floor(hairBottom); y++) {
       for (let x = 0; x < canvas.width; x++) {
@@ -285,7 +304,7 @@ export const HuggingFaceTryOn = ({
         const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
         
         // Apply color to hair regions (avoiding very dark or very light areas)
-        if (brightness > 30 && brightness < 200) {
+        if (brightness > 30 && brightness < 200) { // These thresholds help target hair-like regions
           data[i] = targetColor[0];
           data[i + 1] = targetColor[1];
           data[i + 2] = targetColor[2];
@@ -294,31 +313,31 @@ export const HuggingFaceTryOn = ({
     }
 
     ctx.putImageData(imageData, 0, 0);
-    console.log('🎨 Hair color processing complete');
+    // console.log('🎨 Hair color processing complete'); // Removed for cleanup
   };
 
   const applyVisibleHairStyle = async (
-    ctx: CanvasRenderingContext2D, 
-    canvas: HTMLCanvasElement, 
-    style: string, 
+    ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    style: string,
     landmarks?: FaceLandmarks | null
   ) => {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
 
-    console.log('✂️ Processing hair style:', style);
+    // console.log('✂️ Processing hair style:', style); // Removed for cleanup
 
     let hairTop, hairBottom;
     if (landmarks?.detected && landmarks.face) {
       hairTop = Math.max(0, landmarks.face.y - landmarks.face.height * 0.5);
       hairBottom = landmarks.face.y + landmarks.face.height * 0.4;
-      console.log('✂️ Defined hair region for styling using MediaPipe face box:', { top: hairTop, bottom: hairBottom, faceY: landmarks.face.y, faceHeight: landmarks.face.height });
+      // console.log('✂️ Defined hair region for styling using MediaPipe face box:', { top: hairTop, bottom: hairBottom, faceY: landmarks.face.y, faceHeight: landmarks.face.height }); // Removed for cleanup
     } else {
       hairTop = 0;
       hairBottom = canvas.height * 0.5;
-      console.log('✂️ Defined hair region for styling using fallback:', { hairTop, hairBottom });
+      // console.log('✂️ Defined hair region for styling using fallback:', { hairTop, hairBottom }); // Removed for cleanup
     }
-    console.log('✂️ Final Hair region for styling:', { hairTop, hairBottom });
+    // console.log('✂️ Final Hair region for styling:', { hairTop, hairBottom }); // Removed for cleanup
 
 
     if (style.toLowerCase().includes('curly')) {
@@ -352,7 +371,7 @@ export const HuggingFaceTryOn = ({
     }
 
     ctx.putImageData(imageData, 0, 0);
-    console.log('✂️ Hair style processing complete');
+    // console.log('✂️ Hair style processing complete'); // Removed for cleanup
   };
 
   const hasEffectsSelected = selectedMakeup || selectedHairStyle || selectedHairColor;
