@@ -1,0 +1,8 @@
+
+project_id = "ejibzjmgjfzentnwcblm"
+
+[functions.face-detection]
+verify_jwt = false
+
+[functions.apply-makeup]
+verify_jwt = false
